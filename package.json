@@ -1,0 +1,7 @@
+{
+  "name": "food-club-ordering",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Food ordering website with Vercel, Supabase and Telegram",
+  "engines": { "node": ">=20" }
+}
