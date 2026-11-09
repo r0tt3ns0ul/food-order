@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101114">
+  <title>Food Club — заказ еды</title>
+  <style>
+    :root{--bg:#101114;--panel:#191b20;--panel2:#22252c;--muted:#9a9eaa;--text:#f7f7f8;--accent:#ff6b35;--accent2:#ff8b55;--line:#2b2e36;--green:#55c98b}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    button,input{font:inherit}button{cursor:pointer}.wrap{max-width:1180px;margin:auto;padding:24px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:850;font-size:22px;letter-spacing:-.6px}.logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#ffad54);display:grid;place-items:center;font-size:22px}
+    .sub{color:var(--muted);font-size:13px;margin-top:3px}.cart-top{background:var(--panel2);border:1px solid var(--line);color:white;border-radius:14px;padding:11px 15px;font-weight:700}
+    .hero{background:linear-gradient(110deg,#28201e,#1c1d22 58%,#24252b);border:1px solid #343039;border-radius:25px;padding:32px;display:flex;justify-content:space-between;align-items:center;gap:20px;overflow:hidden;margin-bottom:28px}
+    .hero h1{font-size:clamp(28px,4vw,44px);line-height:1.05;letter-spacing:-1.4px;margin:0 0 12px;max-width:570px}.hero p{color:#c1bdc0;margin:0}.hero-emoji{font-size:clamp(70px,11vw,120px);filter:drop-shadow(0 12px 24px #0008)}
+    .section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:28px 0 16px}.section-head h2{margin:0;font-size:24px;letter-spacing:-.5px}.section-head span{color:var(--muted);font-size:13px}
+    .categories{display:flex;gap:9px;overflow:auto;padding-bottom:5px;margin-bottom:20px}.cat{white-space:nowrap;border:1px solid var(--line);background:var(--panel);color:#d9dbe0;padding:10px 16px;border-radius:999px}.cat.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:750}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.item{background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;min-width:0}.food-art{height:150px;display:grid;place-items:center;background:radial-gradient(circle at 50% 70%,#514039,#29262a 60%,#202127);font-size:76px}.item-body{padding:16px;display:flex;flex-direction:column;gap:9px;flex:1}.item h3{font-size:17px;margin:0}.desc{font-size:13px;line-height:1.45;color:var(--muted);min-height:36px}.item-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto}.price{font-weight:850;font-size:17px}.add{border:0;background:var(--accent);color:white;border-radius:12px;padding:10px 14px;font-weight:800}.add:hover,.checkout:hover{background:var(--accent2)}
+    .layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}.side{position:sticky;top:18px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:20px}.side h2{margin:0 0 15px;font-size:21px}.field-label{display:block;font-size:13px;color:#c4c6ce;margin:16px 0 7px}.pc-input{width:100%;padding:13px 14px;border:1px solid #3a3d47;border-radius:12px;background:#111318;color:white;outline:none}.pc-input:focus{border-color:var(--accent)}.cart-list{display:flex;flex-direction:column;gap:12px;max-height:290px;overflow:auto}.empty{color:var(--muted);font-size:14px;padding:18px 0;text-align:center}.cart-row{display:grid;grid-template-columns:1fr auto;gap:8px;border-bottom:1px solid var(--line);padding-bottom:11px}.cart-name{font-weight:700;font-size:14px}.cart-price{font-size:13px;color:var(--muted);margin-top:3px}.qty{display:flex;align-items:center;gap:9px}.qty button{width:27px;height:27px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:white}.total{display:flex;justify-content:space-between;font-weight:850;font-size:18px;margin:17px 0}.checkout{width:100%;padding:14px;border:0;border-radius:13px;background:var(--accent);color:white;font-weight:850}.checkout:disabled{opacity:.45;cursor:not-allowed}.hint{font-size:11px;line-height:1.5;color:var(--muted);margin:10px 0 0}.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#222831;border:1px solid #424854;color:white;padding:13px 18px;border-radius:14px;transition:.25s;z-index:5;max-width:90%;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}footer{text-align:center;color:#747985;font-size:12px;padding:35px 0 10px}
+    @media(max-width:850px){.layout{grid-template-columns:1fr}.side{position:static}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{padding:24px}}
+    @media(max-width:520px){.wrap{padding:15px}.grid{grid-template-columns:1fr 1fr;gap:10px}.food-art{height:112px;font-size:55px}.item-body{padding:12px}.item h3{font-size:14px}.desc{font-size:11px;min-height:45px}.price{font-size:14px}.add{padding:9px 10px;font-size:12px}.hero-emoji{display:none}.hero{padding:23px}.hero h1{font-size:30px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><div class="logo">🍔</div><div>FOOD CLUB<div class="sub">Заказ еды прямо к игровому месту</div></div></div>
+    <button class="cart-top" onclick="document.querySelector('#order-panel').scrollIntoView({behavior:'smooth'})">🛒 Корзина <span id="cart-count">0</span></button>
+  </header>
+  <section class="hero">
+    <div><h1>Перерыв на вкусное.<br>Не выходя из игры.</h1><p>Выбирай любимые блюда — мы получим твой заказ.</p></div>
+    <div class="hero-emoji">🍟🥤</div>
+  </section>
+  <div class="layout">
+    <main>
+      <div class="section-head"><h2>Меню</h2><span>Свежеприготовленная еда</span></div>
+      <nav class="categories" id="categories"></nav>
+      <div class="grid" id="products"></div>
+    </main>
+    <aside class="side" id="order-panel">
+      <h2>Твой заказ</h2>
+      <div class="cart-list" id="cart-list"><div class="empty">Корзина пока пустая.<br>Добавь что-нибудь вкусное 👀</div></div>
+      <div class="total"><span>Итого</span><span id="total">0 ₸</span></div>
+      <label class="field-label" for="pc-number">Номер компьютера *</label>
+      <input class="pc-input" id="pc-number" inputmode="numeric" maxlength="5" placeholder="Например, 12" autocomplete="off">
+      <button class="checkout" id="checkout" disabled>Оформить заказ →</button>
+      <p class="hint">Перед отправкой проверь номер компьютера и состав заказа.</p>
+    </aside>
+  </div>
+  <footer>FOOD CLUB · Заказ еды в несколько кликов</footer>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  // РЕДАКТИРУЙ МЕНЮ ЗДЕСЬ: название, категория, цена, описание и эмодзи.
+  const MENU = [
+    {id:'burger',name:'Классический бургер',cat:'Бургеры',price:1600,desc:'Сочная котлета, сыр, свежие овощи и фирменный соус.',emoji:'🍔'},
+    {id:'cheese',name:'Чизбургер',cat:'Бургеры',price:1800,desc:'Говяжья котлета, двойной сыр и фирменный соус.',emoji:'🍔'},
+    {id:'doner',name:'Донер',cat:'Донеры',price:1700,desc:'Мясо, овощи и соус в мягкой лепёшке.',emoji:'🌯'},
+    {id:'chicken-doner',name:'Донер с курицей',cat:'Донеры',price:1500,desc:'Курица, свежие овощи и нежный соус.',emoji:'🌯'},
+    {id:'fries',name:'Картофель фри',cat:'Снеки',price:700,desc:'Золотистый картофель с солью.',emoji:'🍟'},
+    {id:'nuggets',name:'Наггетсы',cat:'Снеки',price:1100,desc:'Хрустящие куриные кусочки.',emoji:'🍗'},
+    {id:'cola',name:'Coca-Cola',cat:'Напитки',price:500,desc:'Холодный напиток, 0.5 л.',emoji:'🥤'},
+    {id:'water',name:'Вода',cat:'Напитки',price:300,desc:'Питьевая вода, 0.5 л.',emoji:'💧'}
+  ];
+  const money = n => new Intl.NumberFormat('ru-RU').format(n) + ' ₸';
+  const cart = {};
+  let activeCat = 'Все';
+  const categories = ['Все', ...new Set(MENU.map(x=>x.cat))];
+  const catsEl = document.getElementById('categories');
+  const productsEl = document.getElementById('products');
+  const cartEl = document.getElementById('cart-list');
+  const checkout = document.getElementById('checkout');
+  function renderCategories(){
+    catsEl.innerHTML = categories.map(c=>`<button class="cat ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`).join('');
+    catsEl.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{activeCat=b.dataset.cat;renderCategories();renderProducts()}));
+  }
+  function renderProducts(){
+    const list = activeCat==='Все'?MENU:MENU.filter(x=>x.cat===activeCat);
+    productsEl.innerHTML = list.map(p=>`<article class="item"><div class="food-art">${p.emoji}</div><div class="item-body"><h3>${p.name}</h3><div class="desc">${p.desc}</div><div class="item-bottom"><span class="price">${money(p.price)}</span><button class="add" data-id="${p.id}">+ Добавить</button></div></div></article>`).join('');
+    productsEl.querySelectorAll('.add').forEach(b=>b.addEventListener('click',()=>{cart[b.dataset.id]=(cart[b.dataset.id]||0)+1;renderCart()}));
+  }
+  function renderCart(){
+    const entries=MENU.filter(p=>cart[p.id]);
+    const count=entries.reduce((s,p)=>s+cart[p.id],0);
+    const total=entries.reduce((s,p)=>s+p.price*cart[p.id],0);
+    document.getElementById('cart-count').textContent=count;
+    document.getElementById('total').textContent=money(total);
+    checkout.disabled=!count;
+    cartEl.innerHTML=entries.length?entries.map(p=>`<div class="cart-row"><div><div class="cart-name">${p.name}</div><div class="cart-price">${money(p.price)} × ${cart[p.id]}</div></div><div class="qty"><button data-minus="${p.id}" aria-label="Уменьшить">−</button><b>${cart[p.id]}</b><button data-plus="${p.id}" aria-label="Добавить">+</button></div></div>`).join(''):'<div class="empty">Корзина пока пустая.<br>Добавь что-нибудь вкусное 👀</div>';
+    cartEl.querySelectorAll('[data-minus]').forEach(b=>b.onclick=()=>{const id=b.dataset.minus;cart[id]--;if(!cart[id])delete cart[id];renderCart()});
+    cartEl.querySelectorAll('[data-plus]').forEach(b=>b.onclick=()=>{const id=b.dataset.plus;cart[id]++;renderCart()});
+  }
+  function showToast(message){const t=document.getElementById('toast');t.textContent=message;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500)}
+  checkout.addEventListener('click',async()=>{
+    const pc=document.getElementById('pc-number').value.trim();
+    if(!/^[0-9]{1,5}$/.test(pc)){showToast('Введи корректный номер ПК');document.getElementById('pc-number').focus();return}
+    const items=MENU.filter(p=>cart[p.id]).map(p=>({id:p.id,quantity:cart[p.id]}));
+    if(!items.length)return;
+    checkout.disabled=true;checkout.textContent='Отправляем…';
+    try{
+      const res=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pcNumber:pc,items})});
+      const data=await res.json();
+      if(!res.ok)throw new Error(data.error||'Не удалось отправить заказ');
+      Object.keys(cart).forEach(k=>delete cart[k]);renderCart();
+      showToast(`Заказ №${data.orderNumber} отправлен!`);
+      checkout.textContent='Заказ отправлен ✓';
+    }catch(e){showToast(e.message||'Ошибка отправки. Попробуй ещё раз.');checkout.textContent='Оформить заказ →';checkout.disabled=false}
+  });
+  renderCategories();renderProducts();renderCart();
+</script>
+</body>
+</html>
