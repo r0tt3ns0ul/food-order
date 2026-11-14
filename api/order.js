@@ -1,65 +1,98 @@
+
 const crypto = require('node:crypto');
 const { json, db, telegram, escapeHtml } = require('../lib/server');
 
 module.exports = async (req, res) => {
-  if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
-  try {
-    const pcNumber = String(req.body?.pcNumber || '').trim();
-    const rows = req.body?.items;
-    if (!/^[0-9]{1,5}$/.test(pcNumber)) return json(res, 400, { error: 'Укажи корректный номер ПК.' });
-    if (!Array.isArray(rows) || rows.length < 1 || rows.length > 30) return json(res, 400, { error: 'Корзина пуста.' });
+  if (req.method !== 'POST') {
+    return json(res, 405, { error: 'Method not allowed' });
+  }
 
-    const ids = [...new Set(rows.map(x => String(x.id || '')))];
-    const products = await db(`products?select=id,name,price,available&id=in.(${ids.map(encodeURIComponent).join(',')})`);
-    const normalized = [];
-    for (const row of rows) {
-      const p = products.find(x => x.id === row.id && x.available);
-      const quantity = Number(row.quantity);
-      if (!p || !Number.isInteger(quantity) || quantity < 1 || quantity > 50) {
-        return json(res, 400, { error: 'Один из товаров больше не доступен. Обнови меню.' });
-      }
-      normalized.push({ id: p.id, name: p.name, price: Number(p.price), quantity });
+  try {
+    const name = String(req.body?.name || '').trim();
+    const phone = String(req.body?.phone || '').trim();
+    const pcNumber = String(req.body?.pcNumber || '').trim();
+    const description = String(req.body?.description || '').trim();
+
+    if (name.length < 2 || name.length > 60) {
+      return json(res, 400, { error: 'Проверь имя. Нужно от 2 до 60 символов.' });
     }
-    const total = normalized.reduce((s, p) => s + p.price * p.quantity, 0);
+
+    if (!/^\+?[0-9\s()\-]{7,20}$/.test(phone)) {
+      return json(res, 400, { error: 'Проверь номер телефона.' });
+    }
+
+    if (!/^[0-9]{1,5}$/.test(pcNumber)) {
+      return json(res, 400, { error: 'Укажи корректный номер компьютера.' });
+    }
+
+    if (description.length < 3 || description.length > 1500) {
+      return json(res, 400, { error: 'Опиши заказ (от 3 до 1500 символов).' });
+    }
+
     const orderNumber = crypto.randomBytes(4).toString('hex').toUpperCase();
+
     const inserted = await db('orders', {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
       body: JSON.stringify([{
         order_number: orderNumber,
         pc_number: pcNumber,
-        items: normalized,
-        total,
+        customer_name: name,
+        phone,
+        description,
+        items: [],
+        total: 0,
         status: 'new'
       }])
     });
+
     const order = inserted?.[0];
+
+    if (!order) {
+      throw new Error('Order was not saved');
+    }
+
     const message = [
-      '🍔 <b>НОВЫЙ ЗАКАЗ</b>',
+      '🍔 <b>НОВЫЙ ЗАКАЗ FOOD CLUB</b>',
       `🧾 Заказ: <b>#${orderNumber}</b>`,
+      `👤 Имя: ${escapeHtml(name)}`,
+      `📞 Телефон: ${escapeHtml(phone)}`,
       `🖥 Компьютер: <b>ПК-${escapeHtml(pcNumber)}</b>`,
       '',
-      ...normalized.map(p => `• ${escapeHtml(p.name)} × ${p.quantity} — ${(p.price * p.quantity).toLocaleString('ru-RU')} ₸`),
+      '📝 <b>СОСТАВ ЗАКАЗА:</b>',
+      escapeHtml(description),
       '',
-      `💰 <b>ИТОГО: ${total.toLocaleString('ru-RU')} ₸</b>`,
       '🟡 Статус: Новый'
     ].join('\n');
+
     try {
       const sent = await telegram(message);
-      if (order?.id) {
-        await db(`orders?id=eq.${order.id}`, {
+
+      if (order.id) {
+        await db(`orders?id=eq.${encodeURIComponent(order.id)}`, {
           method: 'PATCH',
           headers: { Prefer: 'return=minimal' },
-          body: JSON.stringify({ telegram_message_id: sent.message_id })
+          body: JSON.stringify({
+            telegram_message_id: sent.message_id
+          })
         });
       }
-    } catch (e) {
-      console.error('Order saved but Telegram notification failed:', e);
-      return json(res, 502, { error: 'Заказ сохранён, но Telegram не принял уведомление. Позови администратора.' });
+    } catch (error) {
+      console.error('Telegram notification failed:', error);
+      return json(res, 502, {
+        error: 'Заказ сохранён, но Telegram не принял уведомление. Позови администратора.'
+      });
     }
-    return json(res, 200, { ok: true, orderNumber });
-  } catch (e) {
-    console.error('Order API error:', e);
-    return json(res, 500, { error: 'Не удалось оформить заказ. Проверь настройки базы данных.' });
+
+    return json(res, 200, {
+      ok: true,
+      orderNumber
+    });
+
+  } catch (error) {
+    console.error('Order API error:', error);
+    return json(res, 500, {
+      error: 'Не удалось оформить заказ. Попробуй ещё раз.'
+    });
   }
 };
